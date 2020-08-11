@@ -201,14 +201,27 @@ def extract_transform_load(wiki_file, kaggle_file, ratings_file):
     movies_with_ratings_df = pd.merge(movies_df, rating_counts, left_on='kaggle_id', right_index=True, how='left')
     movies_with_ratings_df[rating_counts.columns] = movies_with_ratings_df[rating_counts.columns].fillna(0)
     
+    user = "postgres"
+    location = "localhost"
+    port = "5432"
+    database = "movie_data"
+    db_str = f"postgres://{user}:{db_password}@{location}:{port}/{database}"
+    engine = create_engine(db_str)
+    movies_df.to_sql(name='movies', con=engine, if_exists='append')
     
-    
-    
-    
-    
-    
-    
-    
+    rows_imported = 0
+    # get the start_time from time.time()
+    start_time = time.time()
+    for data in pd.read_csv(f'{file_dir}ratings.csv', chunksize=1000000):
+        print(f'importing rows {rows_imported} to {rows_imported + len(data)}...', end='')
+        data.to_sql(name='ratings', con=engine, if_exists='append')
+        rows_imported += len(data)
+
+        # add elapsed time to final print out
+        print(f'Done. {time.time() - start_time} total seconds elapsed')
+
+    print("Transfer Completed")
+
     return
   
 
