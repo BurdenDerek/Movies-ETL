@@ -129,23 +129,32 @@ def extract_transform_load(wiki_file, kaggle_file, ratings_file):
         else:
             return np.nan
     
-    wiki_movies_df['box_office'] = box_office.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
-    wiki_movies_df.drop('Box office', axis=1, inplace=True)
+    try:
+        wiki_movies_df['box_office'] = box_office.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
+        wiki_movies_df.drop('Box office', axis=1, inplace=True)
+    except Exception as e:
+        print(e)
     
     budget = wiki_movies_df['Budget'].dropna()
     budget = budget.map(lambda x: ' '.join(x) if type(x) == list else x)
     budget = budget.str.replace(r'\$.*[-—–](?![a-z])', '$', regex=True)
-    wiki_movies_df['budget'] = budget.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
-    wiki_movies_df.drop('Budget', axis=1, inplace=True)
-    
+    try:
+        wiki_movies_df['budget'] = budget.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
+        wiki_movies_df.drop('Budget', axis=1, inplace=True)
+    except Exception as e:
+        print(e)
+        
     release_date = wiki_movies_df['Release date'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
     
     date_form_one = r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s[123]\d,\s\d{4}'
     date_form_two = r'\d{4}.[01]\d.[123]\d'
     date_form_three = r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}'
     date_form_four = r'\d{4}'
-    wiki_movies_df['release_date'] = pd.to_datetime(release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})')[0], infer_datetime_format=True)
-    
+    try:
+        wiki_movies_df['release_date'] = pd.to_datetime(release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})')[0], infer_datetime_format=True)
+    except Exception as e:
+        print(e)
+
     running_time = wiki_movies_df['Running time'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
     running_time_extract = running_time.str.extract(r'(\d+)\s*ho?u?r?s?\s*(\d*)|(\d+)\s*m')
     running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
